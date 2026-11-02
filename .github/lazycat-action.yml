@@ -23,9 +23,8 @@ images:
     sort: semver
     # Upstream publishes composite tags like 7.1.4-php8.4-apache; extract the
     # leading x.y.z as the application version.
-    tag_regex: ^[0-9]+[.][0-9]+[.][0-9]+-php[0-9.]+-apache$
+    tag_regex: ^[0-9]+[.][0-9]+[.][0-9]+-php8[.]4-apache$
     version_regex: ^(?P<version>[0-9]+[.][0-9]+[.][0-9]+)-php
-    version_template: "{version}-php8.4-apache"
     delivery:
       mode: mirror
       require_digest_match: true
