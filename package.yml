@@ -1,0 +1,18 @@
+package: community.lazycat.app.wordpress
+name: WordPress
+version: 0.0.0
+description: "The world's most popular CMS: posts, pages, media, themes and a huge plugin ecosystem."
+min_os_version: "1.5.0"
+homepage: https://github.com/WordPress/WordPress
+author: WordPress
+license: GPL-2.0
+permissions:
+  required:
+    - net.internet
+locales:
+  zh:
+    name: WordPress
+    description: "最主流的建站程序：写文章、建页面、传媒体、换主题装插件，博客和企业站都能做。"
+  en:
+    name: WordPress
+    description: "The world's most popular CMS: posts, pages, media, themes and a huge plugin ecosystem."

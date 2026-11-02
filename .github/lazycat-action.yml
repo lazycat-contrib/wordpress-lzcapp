@@ -1,0 +1,41 @@
+version: 1
+project:
+  root: .
+  build_config: lzc-build.yml
+  package_file: package.yml
+  output: dist/application.lpk
+  target_arch: amd64
+update:
+  strategy: publish
+  allow_downgrade: false
+  version_source:
+    type: image
+    image: wordpress
+build:
+  toolchains: []
+  run_buildscript: false
+images:
+  - id: wordpress
+    target: service
+    service: wordpress
+    source: library/wordpress
+    channel: stable
+    sort: semver
+    # Upstream publishes composite tags like 7.1.4-php8.4-apache; extract the
+    # leading x.y.z as the application version.
+    tag_regex: ^[0-9]+[.][0-9]+[.][0-9]+-php[0-9.]+-apache$
+    version_regex: ^(?P<version>[0-9]+[.][0-9]+[.][0-9]+)-php
+    version_template: "{version}-php8.4-apache"
+    delivery:
+      mode: mirror
+      require_digest_match: true
+release:
+  use_github_release_notes: true
+  store_changelog_format: plain
+stores:
+  official:
+    enabled: false
+  private:
+    enabled: false
+    name: WordPress
+    skip_if_version_exists: true

@@ -1,0 +1,66 @@
+application:
+  subdomain: wordpress
+  multi_instance: false
+  upstreams:
+    - location: /package-licenses/
+      backend: file:///lzcapp/pkg/content/licenses/
+    - location: /
+      backend: http://wordpress:80/
+
+services:
+  db:
+    image: docker.1ms.run/library/mariadb:10.11
+    environment:
+      - MARIADB_ROOT_PASSWORD={{ stable_secret "wordpress_db_root" | replace "\r" "" | replace "\n" "" }}
+      - MARIADB_DATABASE=wordpress
+      - MARIADB_USER=wordpress
+      - |-
+        MARIADB_PASSWORD={{ stable_secret "wordpress_db_password" | replace "\r" "" | replace "\n" "" }}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mariadb-admin ping -h 127.0.0.1 -u root -p"$$MARIADB_ROOT_PASSWORD"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    binds:
+      - /lzcapp/var/db:/var/lib/mysql
+
+  wordpress:
+    # upstream: library/wordpress:7.1.4-php8.4-apache
+    image: docker.1ms.run/library/wordpress:7.1.4-php8.4-apache
+    depends_on:
+      - db
+    environment:
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_NAME=wordpress
+      - WORDPRESS_DB_USER=wordpress
+      - |-
+        WORDPRESS_DB_PASSWORD={{ stable_secret "wordpress_db_password" | replace "\r" "" | replace "\n" "" }}
+      - |-
+        WORDPRESS_CONFIG_EXTRA=define('WP_HOME', 'https://{{ .S.AppDomain }}'); define('WP_SITEURL', 'https://{{ .S.AppDomain }}'); if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') { $$_SERVER['HTTPS'] = 'on'; }
+      - TZ=Asia/Shanghai
+    binds:
+      - /lzcapp/var/html:/var/www/html
+
+usage: |
+  WordPress 是最主流的建站程序：写文章、建页面、传媒体、换主题装插件。
+
+  使用方法：
+  1. 打开应用，会进入 WordPress 安装向导，选择语言，填写站点标题、管理员用户名和密码。
+  2. 安装完成后进入后台（/wp-admin），可以发文章、建页面、装主题和插件。
+  3. 前台访问首页即可看到网站。
+
+  数据与安全：
+  - 数据库在 MariaDB（/lzcapp/var/db），程序、主题、插件和上传的媒体都在 /lzcapp/var/html。
+    卸载应用会一并删除，请定期备份。
+  - 数据库密码由平台稳定密钥生成，每个部署不同，不写成固定值。
+  - 本包不预置任何 WordPress 账号或默认口令；管理员账号由安装向导创建。
+  - 已通过 WORDPRESS_CONFIG_EXTRA 固定站点地址为 https 域名，避免反代下跳转到 localhost。
+  - 应用经懒猫入口鉴权访问。
+
+  说明：
+  - 本应用包含两个容器（WordPress + MariaDB），启动顺序由依赖关系保证。
+  - 未配置邮件服务，注册通知、找回密码等依赖邮件的功能不可用。
+  - 未做真机验证：安装向导、后台登录、发文、上传媒体、装插件以及重启后持久化均未在设备上实测。
